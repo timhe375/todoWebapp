@@ -21,9 +21,12 @@ function addNewTodo() {
   const todoListEl = document.querySelector("#todo-list");
   todoListEl.appendChild(newTodoLi);
 
+  const todoCheckboxEl = document.createElement("input");
+  todoCheckboxEl.setAttribute("type", "checkbox");
+  newTodoLi.appendChild(todoCheckboxEl);
+
   newTodoEl.value = "";
 }
-
 function isDuplication(todo) {
   todo = todo.toLowerCase();
   const todoListEl = document.querySelector("#todo-list");
@@ -40,3 +43,15 @@ function isDuplication(todo) {
 
 const addTodoBtn = document.querySelector("#add-todo");
 addTodoBtn.addEventListener("click", addNewTodo);
+
+const todoListEl = document.querySelector("#todo-list");
+todoListEl.addEventListener("change", toggleTodoState);
+
+function toggleTodoState(event) {
+  const checkbox = event.target;
+  if (checkbox.checked === true) {
+    checkbox.parentElement.classList.add("done");
+  } else {
+    checkbox.parentElement.classList.remove("done");
+  }
+}
