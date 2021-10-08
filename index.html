@@ -10,11 +10,25 @@
   <body>
     <h1>Todo App</h1>
     <form onsubmit="return false">
-      <input type="text" id="new-todo" />
+      <div class="todo-filter" id="todo-filter">
+        <label for="filter-all">Filter All</label>
+        <input
+          type="radio"
+          name="todo-filter"
+          value="all"
+          id="filter-all"
+          checked
+        />
+        <label for="filter-all">Filter done</label>
+        <input type="radio" name="todo-filter" value="done" id="filter-done" />
+
+        <label for="filter-all">Filter open</label>
+        <input type="radio" name="todo-filter" value="open" id="filter-open" />
+      </div>
+      <input type="text" id="new-todo" placeholder="What's your task" />
       <button class="inputBn" id="add-todo">Add Todo</button>
     </form>
     <ul class="todoList" id="todo-list"></ul>
     <script src="script.js"></script>
-    <link rel="stylesheet" href="style.css" />
   </body>
 </html>
