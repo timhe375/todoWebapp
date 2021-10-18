@@ -1,14 +1,5 @@
 let todos = [];
 
-function fetchDataFromApi() {
-  fetch("http://localhost:4730/todos")
-    .then((response) => response.json())
-    .then((data) => {
-      todos = data;
-      renderTodos();
-    });
-}
-
 function readTodosFromLocalStorage() {
   const todosFromStorage = localStorage.getItem("todos");
   if (todosFromStorage !== null) {
@@ -20,35 +11,34 @@ function saveTodosToLocalStorage() {
   localStorage.setItem("todos", JSON.stringify(todos));
 }
 
-function addNewTodo() {
-  const newTodoEl = document.querySelector("#new-todo");
-  const newTodoText = newTodoEl.value.trim();
+const newTodoEl = document.querySelector("#new-todo");
+const newTodoText = newTodoEl.value.trim();
+// function addNewTodo() {
+//   // length check
+//   if (newTodoText.length === 0) {
+//     return;
+//   }
 
-  // length check
-  if (newTodoText.length === 0) {
-    return;
-  }
+//   // duplicate check
+//   if (isDuplicate(newTodoText) === true) {
+//     alert("This todo is already in the list");
+//     return;
+//   }
 
-  // duplicate check
-  if (isDuplicate(newTodoText)) {
-    alert("This todo is already in the list");
-    return;
-  }
+//   const newTodo = {
+//     description: newTodoText,
+//     done: false,
+//   };
 
-  const newTodo = {
-    todo: newTodoText,
-    done: false,
-  };
-  todos.push(newTodo);
+//   todos.push(newTodo);
+//   renderTodos();
+//   //saveTodosToLocalStorage();
 
-  renderTodos();
-  saveTodosToLocalStorage();
-
-  newTodoEl.value = "";
-}
+//   newTodoEl.value = "";
+// }
 const addTodoBtn = document.querySelector("#add-todo");
-addTodoBtn.addEventListener("click", addNewTodo);
 
+//addTodoBtn.addEventListener("click", addNewTodo);
 function renderTodos() {
   const todoListEl = document.querySelector("#todo-list");
   todoListEl.innerHTML = "";
@@ -78,16 +68,16 @@ function renderTodos() {
 
     todoListEl.append(newTodoLiEl);
   });
-
   filterTodos();
 }
-
+//is Duplicated
 function isDuplicate(todo) {
-  todo = todo.toLowerCase();
-
+  newData = todo;
   for (let i = 0; i < todos.length; i++) {
-    const currentTodo = todos[i];
-    if (currentTodo.todo === todo) {
+    console.log(newData);
+    const currentTodo = todos[i].description;
+    console.log(currentTodo);
+    if (currentTodo === newData) {
       return true;
     }
   }
@@ -96,6 +86,8 @@ function isDuplicate(todo) {
 
 const todoListEl = document.querySelector("#todo-list");
 todoListEl.addEventListener("change", toggleTodoState);
+
+//toggle ziwschen true/false
 function toggleTodoState(event) {
   const checkbox = event.target;
   if (checkbox.checked === true) {
@@ -111,9 +103,10 @@ function toggleTodoState(event) {
 
 const todoFilterEl = document.querySelector("#todo-filter");
 todoFilterEl.addEventListener("change", filterTodos);
+
+//filter all todos
 function filterTodos() {
   const filterValue = getFilterValue();
-
   const todoListEl = document.querySelector("#todo-list");
   for (let i = 0; i < todoListEl.children.length; i++) {
     const currentTodo = todoListEl.children[i];
@@ -131,6 +124,52 @@ function getFilterValue() {
     .value;
 }
 
+const url = "http://localhost:4730/todos";
+//get Data from Api
+function fetchDataFromApi() {
+  fetch(url)
+    .then((response) => response.json())
+    .then((data) => {
+      todos = data;
+      renderTodos();
+    });
+}
+//Post Data from Api
+function postDataToApi() {
+  let myHeader = new Headers();
+  myHeader.append("Content-Type", "application/json");
+  let textInput = newTodoEl.value.trim();
+  if (textInput.length === 0) {
+    return;
+  }
+  console.log(textInput);
+  // duplicate check
+  if (isDuplicate(textInput)) {
+    alert("This todo is already in the list");
+    return;
+  }
+
+  const newTodo = {
+    description: textInput,
+    done: false,
+  };
+
+  let requestOptions = {
+    method: "POST",
+    headers: myHeader,
+    body: JSON.stringify(newTodo),
+    redirect: "follow",
+  };
+  fetch(url, requestOptions)
+    .then((res) => res.json())
+    .then((data) => {
+      todos.push(data);
+      renderTodos();
+    });
+}
+addTodoBtn.addEventListener("click", postDataToApi);
+
+//Aufruf bei App start der fetchDataFrom Api
 function initTodoApp() {
   fetchDataFromApi();
 }
