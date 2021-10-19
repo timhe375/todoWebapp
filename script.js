@@ -74,9 +74,7 @@ function renderTodos() {
 function isDuplicate(todo) {
   newData = todo;
   for (let i = 0; i < todos.length; i++) {
-    console.log(newData);
     const currentTodo = todos[i].description;
-    console.log(currentTodo);
     if (currentTodo === newData) {
       return true;
     }
@@ -125,6 +123,7 @@ function getFilterValue() {
 }
 
 const url = "http://localhost:4730/todos";
+
 //get Data from Api
 function fetchDataFromApi() {
   fetch(url)
@@ -134,20 +133,56 @@ function fetchDataFromApi() {
       renderTodos();
     });
 }
-//Post Data from Api
-function postDataToApi() {
-  let myHeader = new Headers();
-  myHeader.append("Content-Type", "application/json");
-  let textInput = newTodoEl.value.trim();
+function checkValid(textInput) {
   if (textInput.length === 0) {
-    return;
+    return false;
   }
-  console.log(textInput);
   // duplicate check
   if (isDuplicate(textInput)) {
-    alert("This todo is already in the list");
-    return;
+    return false;
   }
+  return true;
+}
+
+function getCurrentTodo() {
+  const textInput = newTodoEl.value.trim();
+
+  const newTodo = {
+    description: textInput,
+    done: false,
+  };
+  return newTodo;
+}
+
+//Post Data from Api
+function postDataToApi() {
+  const todo = getCurrentTodo();
+  let myHeader = new Headers();
+  myHeader.append("Content-Type", "application/json");
+
+  let requestOptions = {
+    method: "POST",
+    headers: myHeader,
+    body: JSON.stringify(todo),
+    redirect: "follow",
+  };
+  if (checkValid(todo.description)) {
+    fetch(url, requestOptions)
+      .then((res) => res.json())
+      .then((data) => {
+        todos.push(data);
+        renderTodos();
+      });
+  } else {
+    alert("This todo is already in the list");
+  }
+}
+addTodoBtn.addEventListener("click", postDataToApi);
+
+function deleteDataFromApi() {
+  let myHeader = new Headers();
+  myHeader.append("Content-Type", "application/json");
+  const textInput = newTodoEl.value;
 
   const newTodo = {
     description: textInput,
@@ -155,22 +190,21 @@ function postDataToApi() {
   };
 
   let requestOptions = {
-    method: "POST",
+    method: "DELETE",
     headers: myHeader,
-    body: JSON.stringify(newTodo),
     redirect: "follow",
   };
-  fetch(url, requestOptions)
-    .then((res) => res.json())
-    .then((data) => {
-      todos.push(data);
-      renderTodos();
+
+  fetch(url + "/5", requestOptions)
+    .then((response) => response.json())
+    .then(() => {
+      console.log("ist gelöscht");
     });
 }
-addTodoBtn.addEventListener("click", postDataToApi);
 
 //Aufruf bei App start der fetchDataFrom Api
 function initTodoApp() {
   fetchDataFromApi();
+  deleteDataFromApi();
 }
 initTodoApp();
