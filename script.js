@@ -46,14 +46,22 @@ function renderTodos() {
   todos.forEach(function (currentTodo) {
     const newTodoLiEl = document.createElement("li");
     newTodoLiEl.innerText = currentTodo.description;
+    newTodoLiEl.setAttribute("data-id", currentTodo.id);
 
-    const todoListEl = document.querySelector("#todo-list");
+    //const todoListEl = document.querySelector("#todo-list");
     todoListEl.appendChild(newTodoLiEl);
 
     const todoCheckboxEl = document.createElement("input");
     todoCheckboxEl.setAttribute("type", "checkbox");
+
     todoCheckboxEl.checked = currentTodo.done;
     newTodoLiEl.appendChild(todoCheckboxEl);
+
+    const todoDeleteButton = document.createElement("button");
+    todoDeleteButton.innerHTML = "Löschen";
+    //console.log(todoDeleteButton);
+    newTodoLiEl.appendChild(todoDeleteButton);
+    todoDeleteButton.addEventListener("click", deleteDataFromApi);
 
     if (currentTodo.done === true) {
       newTodoLiEl.classList.add("done");
@@ -179,32 +187,27 @@ function postDataToApi() {
 }
 addTodoBtn.addEventListener("click", postDataToApi);
 
-function deleteDataFromApi() {
+function deleteDataFromApi(e) {
   let myHeader = new Headers();
   myHeader.append("Content-Type", "application/json");
-  const textInput = newTodoEl.value;
-
-  const newTodo = {
-    description: textInput,
-    done: false,
-  };
 
   let requestOptions = {
     method: "DELETE",
     headers: myHeader,
     redirect: "follow",
   };
-
-  fetch(url + "/5", requestOptions)
+  let deletedId = e.target.parentElement.getAttribute("data-id");
+  fetch(url + "/" + deletedId, requestOptions)
     .then((response) => response.json())
     .then(() => {
       console.log("ist gelöscht");
+      fetchDataFromApi();
+      renderTodos();
     });
 }
 
 //Aufruf bei App start der fetchDataFrom Api
 function initTodoApp() {
   fetchDataFromApi();
-  deleteDataFromApi();
 }
 initTodoApp();
