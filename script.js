@@ -1,213 +1,180 @@
-let todos = [];
+class TodoApp {
+  //Properties
+  todoData = [];
+  url = "http://localhost:4730/todos";
 
-function readTodosFromLocalStorage() {
-  const todosFromStorage = localStorage.getItem("todos");
-  if (todosFromStorage !== null) {
-    todos = JSON.parse(todosFromStorage);
-  }
-}
-
-function saveTodosToLocalStorage() {
-  localStorage.setItem("todos", JSON.stringify(todos));
-}
-
-const newTodoEl = document.querySelector("#new-todo");
-const newTodoText = newTodoEl.value.trim();
-// function addNewTodo() {
-//   // length check
-//   if (newTodoText.length === 0) {
-//     return;
-//   }
-
-//   // duplicate check
-//   if (isDuplicate(newTodoText) === true) {
-//     alert("This todo is already in the list");
-//     return;
-//   }
-
-//   const newTodo = {
-//     description: newTodoText,
-//     done: false,
-//   };
-
-//   todos.push(newTodo);
-//   renderTodos();
-//   //saveTodosToLocalStorage();
-
-//   newTodoEl.value = "";
-// }
-const addTodoBtn = document.querySelector("#add-todo");
-
-//addTodoBtn.addEventListener("click", addNewTodo);
-function renderTodos() {
-  const todoListEl = document.querySelector("#todo-list");
-  todoListEl.innerHTML = "";
-
-  todos.forEach(function (currentTodo) {
-    const newTodoLiEl = document.createElement("li");
-    newTodoLiEl.innerText = currentTodo.description;
-    newTodoLiEl.setAttribute("data-id", currentTodo.id);
-
-    //const todoListEl = document.querySelector("#todo-list");
-    todoListEl.appendChild(newTodoLiEl);
-
-    const todoCheckboxEl = document.createElement("input");
-    todoCheckboxEl.setAttribute("type", "checkbox");
-
-    todoCheckboxEl.checked = currentTodo.done;
-    newTodoLiEl.appendChild(todoCheckboxEl);
-
-    const todoDeleteButton = document.createElement("button");
-    todoDeleteButton.innerHTML = "Löschen";
-    //console.log(todoDeleteButton);
-    newTodoLiEl.appendChild(todoDeleteButton);
-    todoDeleteButton.addEventListener("click", deleteDataFromApi);
-
-    if (currentTodo.done === true) {
-      newTodoLiEl.classList.add("done");
-    }
-
-    newTodoLiEl.todo = currentTodo;
-
-    const filterValue = getFilterValue();
-    if (filterValue === "done") {
-      newTodoLiEl.hidden = true;
-    }
-
-    todoListEl.append(newTodoLiEl);
-  });
-  filterTodos();
-}
-//is Duplicated
-function isDuplicate(todo) {
-  newData = todo;
-  for (let i = 0; i < todos.length; i++) {
-    const currentTodo = todos[i].description;
-    if (currentTodo === newData) {
-      return true;
-    }
-  }
-  return false;
-}
-
-const todoListEl = document.querySelector("#todo-list");
-todoListEl.addEventListener("change", toggleTodoState);
-
-//toggle ziwschen true/false
-function toggleTodoState(event) {
-  const checkbox = event.target;
-  if (checkbox.checked === true) {
-    checkbox.parentElement.classList.add("done");
-    checkbox.parentElement.todo.done = true;
-  } else {
-    checkbox.parentElement.classList.remove("done");
-    checkbox.parentElement.todo.done = false;
+  constructor() {
+    this.fetchDataFromApi();
+    this.initEventListeners();
+    this.filterTodos();
   }
 
-  saveTodosToLocalStorage();
-}
-
-const todoFilterEl = document.querySelector("#todo-filter");
-todoFilterEl.addEventListener("change", filterTodos);
-
-//filter all todos
-function filterTodos() {
-  const filterValue = getFilterValue();
-  const todoListEl = document.querySelector("#todo-list");
-  for (let i = 0; i < todoListEl.children.length; i++) {
-    const currentTodo = todoListEl.children[i];
-    if (filterValue === "all") {
-      currentTodo.hidden = false;
-    } else if (filterValue === "open") {
-      currentTodo.hidden = currentTodo.todo.done;
-    } else if (filterValue === "done") {
-      currentTodo.hidden = !currentTodo.todo.done;
-    }
+  initEventListeners() {
+    const addTodoBtn = document.querySelector("#add-todo");
+    addTodoBtn.addEventListener("click", () => this.postDataToApi());
+    const todoListEl = document.querySelector("#todo-list");
+    todoListEl.addEventListener("change", () => this.toggleTodoState);
+    const todoFilterEl = document.querySelector("#todo-filter");
+    todoFilterEl.addEventListener("change", () => this.filterTodos());
   }
-}
-function getFilterValue() {
-  return document.querySelector('#todo-filter input[type="radio"]:checked')
-    .value;
-}
 
-const url = "http://localhost:4730/todos";
+  renderTodos() {
+    const todoListEl = document.querySelector("#todo-list");
+    todoListEl.innerHTML = "";
 
-//get Data from Api
-function fetchDataFromApi() {
-  fetch(url)
-    .then((response) => response.json())
-    .then((data) => {
-      todos = data;
-      renderTodos();
+    this.todoData.forEach((currentTodo) => {
+      const newTodoLiEl = document.createElement("li");
+      newTodoLiEl.innerText = currentTodo.description;
+      newTodoLiEl.setAttribute("data-id", currentTodo.id);
+
+      //const todoListEl = document.querySelector("#todo-list");
+      todoListEl.appendChild(newTodoLiEl);
+
+      const todoCheckboxEl = document.createElement("input");
+      todoCheckboxEl.setAttribute("type", "checkbox");
+
+      todoCheckboxEl.checked = currentTodo.done;
+      newTodoLiEl.appendChild(todoCheckboxEl);
+
+      const todoDeleteButton = document.createElement("button");
+      todoDeleteButton.innerHTML = "Löschen";
+      //console.log(todoDeleteButton);
+      newTodoLiEl.appendChild(todoDeleteButton);
+      todoDeleteButton.addEventListener("click", () =>
+        this.deleteDataFromApi()
+      );
+
+      if (currentTodo.done === true) {
+        newTodoLiEl.classList.add("done");
+      }
+
+      newTodoLiEl.todo = currentTodo;
+
+      const filterValue = this.getFilterValue();
+      console.log(this.getFilterValue());
+      if (filterValue === "done") {
+        newTodoLiEl.hidden = true;
+      }
+
+      todoListEl.append(newTodoLiEl);
     });
-}
-function checkValid(textInput) {
-  if (textInput.length === 0) {
+    this.filterTodos();
+  }
+  //is Duplicated
+  isDuplicate(todo) {
+    const newData = todo;
+    for (let i = 0; i < this.todoData.length; i++) {
+      const currentTodo = this.todoData[i].description;
+      if (currentTodo === newData) {
+        return true;
+      }
+    }
     return false;
   }
-  // duplicate check
-  if (isDuplicate(textInput)) {
-    return false;
+
+  //toggle ziwschen true/false
+  toggleTodoState(event) {
+    const checkbox = event.target;
+    if (checkbox.checked === true) {
+      checkbox.parentElement.classList.add("done");
+      checkbox.parentElement.todo.done = true;
+    } else {
+      checkbox.parentElement.classList.remove("done");
+      checkbox.parentElement.todo.done = false;
+    }
+
+    //saveTodosToLocalStorage();
   }
-  return true;
-}
 
-function getCurrentTodo() {
-  const textInput = newTodoEl.value.trim();
+  //filter all todos
+  filterTodos() {
+    const filterValue = this.getFilterValue();
+    const todoListEl = document.querySelector("#todo-list");
+    for (let i = 0; i < todoListEl.children.length; i++) {
+      const currentTodo = todoListEl.children[i];
+      if (filterValue === "all") {
+        currentTodo.hidden = false;
+      } else if (filterValue === "open") {
+        currentTodo.hidden = currentTodo.todo.done;
+      } else if (filterValue === "done") {
+        currentTodo.hidden = !currentTodo.todo.done;
+      }
+    }
+  }
 
-  const newTodo = {
-    description: textInput,
-    done: false,
-  };
-  return newTodo;
-}
+  getFilterValue() {
+    return document.querySelector('#todo-filter input[type="radio"]:checked')
+      .value;
+  }
+  checkValid(textInput) {
+    if (textInput.length === 0) {
+      return false;
+    }
+    // duplicate check
+    if (this.isDuplicate(textInput)) {
+      return false;
+    }
+    return true;
+  }
+  getCurrentTodo() {
+    const newTodoEl = document.querySelector("#new-todo");
+    const textInput = newTodoEl.value.trim();
 
-//Post Data from Api
-function postDataToApi() {
-  const todo = getCurrentTodo();
-  let myHeader = new Headers();
-  myHeader.append("Content-Type", "application/json");
+    const newTodo = {
+      description: textInput,
+      done: false,
+    };
+    return newTodo;
+  }
 
-  let requestOptions = {
-    method: "POST",
-    headers: myHeader,
-    body: JSON.stringify(todo),
-    redirect: "follow",
-  };
-  if (checkValid(todo.description)) {
-    fetch(url, requestOptions)
-      .then((res) => res.json())
+  fetchDataFromApi() {
+    fetch(this.url)
+      .then((response) => response.json())
       .then((data) => {
-        todos.push(data);
+        this.todoData = data;
+        this.renderTodos();
+      });
+  }
+
+  //Post Data from Api
+  postDataToApi() {
+    const todo = this.getCurrentTodo();
+    let myHeader = new Headers();
+    myHeader.append("Content-Type", "application/json");
+
+    let requestOptions = {
+      method: "POST",
+      headers: myHeader,
+      body: JSON.stringify(todo),
+      redirect: "follow",
+    };
+    if (this.checkValid(todo.description)) {
+      fetch(this.url, requestOptions)
+        .then((res) => res.json())
+        .then((data) => {
+          this.todoData.push(data);
+          this.renderTodos();
+        });
+    } else {
+      alert("This todo is already in the list");
+    }
+  }
+  deleteDataFromApi(e) {
+    let myHeader = new Headers();
+    myHeader.append("Content-Type", "application/json");
+
+    let requestOptions = {
+      method: "DELETE",
+      headers: myHeader,
+      redirect: "follow",
+    };
+    let deletedId = e.target.parentElement.getAttribute("data-id");
+    fetch(this.url + "/" + deletedId, requestOptions)
+      .then((response) => response.json())
+      .then(() => {
+        console.log("ist gelöscht");
+        fetchDataFromApi();
         renderTodos();
       });
-  } else {
-    alert("This todo is already in the list");
   }
 }
-addTodoBtn.addEventListener("click", postDataToApi);
-
-function deleteDataFromApi(e) {
-  let myHeader = new Headers();
-  myHeader.append("Content-Type", "application/json");
-
-  let requestOptions = {
-    method: "DELETE",
-    headers: myHeader,
-    redirect: "follow",
-  };
-  let deletedId = e.target.parentElement.getAttribute("data-id");
-  fetch(url + "/" + deletedId, requestOptions)
-    .then((response) => response.json())
-    .then(() => {
-      console.log("ist gelöscht");
-      fetchDataFromApi();
-      renderTodos();
-    });
-}
-
-//Aufruf bei App start der fetchDataFrom Api
-function initTodoApp() {
-  fetchDataFromApi();
-}
-initTodoApp();
