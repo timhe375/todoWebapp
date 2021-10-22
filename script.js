@@ -13,7 +13,7 @@ class TodoApp {
     const addTodoBtn = document.querySelector("#add-todo");
     addTodoBtn.addEventListener("click", () => this.postDataToApi());
     const todoListEl = document.querySelector("#todo-list");
-    todoListEl.addEventListener("change", () => this.toggleTodoState);
+    todoListEl.addEventListener("change", (e) => this.toggleTodoState(e));
     const todoFilterEl = document.querySelector("#todo-filter");
     todoFilterEl.addEventListener("change", () => this.filterTodos());
   }
@@ -40,8 +40,8 @@ class TodoApp {
       todoDeleteButton.innerHTML = "Löschen";
       //console.log(todoDeleteButton);
       newTodoLiEl.appendChild(todoDeleteButton);
-      todoDeleteButton.addEventListener("click", () =>
-        this.deleteDataFromApi()
+      todoDeleteButton.addEventListener("click", (e) =>
+        this.deleteDataFromApi(e)
       );
 
       if (currentTodo.done === true) {
@@ -51,7 +51,6 @@ class TodoApp {
       newTodoLiEl.todo = currentTodo;
 
       const filterValue = this.getFilterValue();
-      console.log(this.getFilterValue());
       if (filterValue === "done") {
         newTodoLiEl.hidden = true;
       }
@@ -74,16 +73,10 @@ class TodoApp {
 
   //toggle ziwschen true/false
   toggleTodoState(event) {
+    let id = event.target.parentElement.getAttribute("data-id");
     const checkbox = event.target;
-    if (checkbox.checked === true) {
-      checkbox.parentElement.classList.add("done");
-      checkbox.parentElement.todo.done = true;
-    } else {
-      checkbox.parentElement.classList.remove("done");
-      checkbox.parentElement.todo.done = false;
-    }
-
-    //saveTodosToLocalStorage();
+    this.patchDataFromApi(id, checkbox.checked);
+    console.log(event.target.checked);
   }
 
   //filter all todos
@@ -172,9 +165,25 @@ class TodoApp {
     fetch(this.url + "/" + deletedId, requestOptions)
       .then((response) => response.json())
       .then(() => {
-        console.log("ist gelöscht");
-        fetchDataFromApi();
-        renderTodos();
+        alert("Object wurde gelöscht");
+        this.fetchDataFromApi();
+        this.renderTodos();
+      });
+  }
+  patchDataFromApi(id, state) {
+    let myHeader = new Headers();
+    myHeader.append("Content-Type", "application/json");
+    console.log(this.url, id);
+    let requestOptions = {
+      method: "PATCH",
+      headers: myHeader,
+      body: JSON.stringify({ done: state }),
+      redirect: "follow",
+    };
+    fetch(this.url + `/${id}`, requestOptions)
+      .then((response) => response.json())
+      .then(() => {
+        this.fetchDataFromApi();
       });
   }
 }
